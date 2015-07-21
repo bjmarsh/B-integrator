@@ -34,32 +34,31 @@ def getBField(r):
 
 
 def update(t, x):
-    # x is a 6-element vector (x,y,z,vx,vy,vz)
+    # x is a 6-element vector (x,y,z,px,py,pz)
     # returns dx/dt
     #
-    # if B is in Tesla, dt is in ns, v is in units of c, m is in MeV,  then the basic eq is
-    # dv/dt = (gamma + v^2*gamma^3)^-1 * (89.875) Qv/m x B,
+    # if B is in Tesla, dt is in ns, p is in units of MeV/c, m is in MeV,  then the basic eq is
+    # dp/dt = (89.87551787368) Qv x B,
     # where gamma is the typical relativistic factor
     
     global Q,m
 
     dxdt = np.zeros(6)
-    dxdt[0] = x[3] * 2.998e-1
-    dxdt[1] = x[4] * 2.998e-1
-    dxdt[2] = x[5] * 2.998e-1
 
-    B = getBField([x[0],x[1],x[2]])
+    p = x[3:]
+    magp = np.linalg.norm(p)
+    E = np.sqrt(magp**2 + m**2)
+    v = p/E
+    dxdt[:3] = v * 2.99792458e-1
+
+    B = getBField(x[:3])
 
 #    print np.linalg.norm(B)  
     if math.isnan(np.linalg.norm(B)):
-        exit(0)
+        #exit(0)
+        pass
 
-    v = np.array([x[3],x[4],x[5]])
-    magv = np.linalg.norm(v)
-    gamma = 1./(1-magv**2)**0.5
-    mult = 1./(gamma+magv**2*gamma**3)
-
-    dxdt[3:] = mult * (89.875) * Q/m * np.cross(v,B)
+    dxdt[3:] = (89.87551787368) * Q * np.cross(v,B)
 
     return dxdt
 
@@ -77,25 +76,27 @@ def rk4(x0, update_func, dt, nsteps):
 
     for i in range(nsteps):
         k1 = update_func(t, x[:,i])
-        k2 = update_func(t+dt/2., x[:,i]+k1/2.)
-        k3 = update_func(t+dt/2., x[:,i]+k2/2.)
-        k4 = update_func(t+dt, x[:,i]+k3)
+        k2 = update_func(t+dt/2., x[:,i]+dt*k1/2.)
+        k3 = update_func(t+dt/2., x[:,i]+dt*k2/2.)
+        k4 = update_func(t+dt, x[:,i]+dt*k3)
         t += dt
         x[:,i+1] = x[:,i]+dt/6.*(k1+2*k2+2*k3+k4)
-        print np.linalg.norm(x[3:,i+1])
 
     return x
 
 solLength = 21.6  ## in m
 solRad = 7.3   ## in m
 
-dt = 0.05  ## measured in ns
+dt = 0.1  ## measured in ns
 m = 0.5109989  ## measured in MeV
 Q = 1.0  ## measured in units of e
 
 # compute trajectory
-x0 = np.array([0,0,0,0.8,0,-0.5998])
-traj = rk4(x0, update, dt, 100)
+v0 = np.array([0.8,0,-0.599999999])
+p0 = m*v0*(1-np.linalg.norm(v0)**2)**-0.5
+print "Initial p:",np.linalg.norm(p0),"MeV"
+x0 = np.array([0,0,0,p0[0],p0[1],p0[2]])
+traj = rk4(x0, update, dt, 1000)
 
 ## xz slice
 x = np.linspace(-20,20,25)
