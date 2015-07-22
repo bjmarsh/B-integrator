@@ -1,8 +1,9 @@
 import numpy as np
+from Params import *
 
 def getBField(r):
 
-    global solLength, solRad
+    global solRad, solLength
 
     r = np.array(r)
     m = np.array([0.,0.,1500.])

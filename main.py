@@ -3,23 +3,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from GetBField import *
 import Integrator
+from GetBField import *
+from Params import *
 
 
-
-solLength = 21.6  ## in m
-solRad = 7.3   ## in m
-
-dt = 0.1  ## measured in ns
-m = 0.5109989  ## measured in MeV
-Q = 1.0  ## measured in units of e
-p0 = [15000., 0, 5000.] ## in MeV
+p0 = [20000., 0, 5000] ## in MeV
 print "Initial p:",np.linalg.norm(p0),"MeV"
 
 # compute trajectory
 x0 = np.array([0,0,0]+p0)
-traj = Integrator.rk4(x0, update, dt, 1000, Q, m)
+dtVals = np.arange(0.01, 10.01+1e-10, 0.02)
+zVals = []
+
+# for dt in dtVals:
+#     # print "dt =", dt
+#     nsteps = int(10000 * .01/dt)
+#     traj = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
+#     #if dt==.01:
+#     bestTraj=traj.copy()
+#     crossInd = -1
+#     for i in range(traj.shape[1]-1):
+#         if traj[0,i]<20 and traj[0,i+1]>20:
+#             crossInd = i
+#             break
+#     if crossInd==-1:
+#         print "Warning: not enough steps at dt =", dt
+#         break
+#     crossZ = traj[2,crossInd] + (20-traj[0,crossInd])/(traj[0,crossInd+1]-traj[0,crossInd]) * \
+#                                 (traj[2,crossInd+1]-traj[2,crossInd])
+#     zVals.append(crossZ)
+
+# plt.figure(1)
+# plt.plot(dtVals,zVals)
+# plt.xlabel(r"dt")
+# plt.ylabel(r"z")
+
+bestTraj = Integrator.rk4(x0, Integrator.traverseBField, 0.1, 1000)
+time = np.arange(0,100+1e-10,.1)
+plt.figure(1)
+plt.plot(time,bestTraj[1,:])
+
+plt.figure(2)
 
 ## xz slice
 x = np.linspace(-20,20,25)
@@ -36,7 +61,6 @@ for i in range(X.shape[0]):
         Bxy[i,j] = B[0]/np.linalg.norm(B)
         Bzy[i,j] = B[2]/np.linalg.norm(B)
 
-plt.figure(1)
 
 plt.subplot(1,2,1)
 # draw mag field
@@ -47,10 +71,11 @@ plt.plot([solLength/2, solLength/2, -solLength/2, -solLength/2, solLength/2],
          [-solRad, solRad, solRad, -solRad, -solRad], '-')
 
 # draw trajectory
-plt.plot(traj[2,:],traj[0,:],'-', linewidth=2)
+plt.plot(bestTraj[2,:],bestTraj[0,:],'-', linewidth=2)
 
 plt.axis([-30,30,-20,20])
-
+plt.xlabel("z")
+plt.ylabel("x")
 
 
 
@@ -63,10 +88,11 @@ t = np.linspace(0, 2*np.pi, 100)
 plt.plot(solRad*np.cos(t),solRad*np.sin(t), '-')
 
 # draw trajectory
-plt.plot(traj[0,:],traj[1,:],'-', linewidth=2)
+plt.plot(bestTraj[0,:],bestTraj[1,:],'-', linewidth=2)
 
 plt.axis([-20,20,-20,20])
-
+plt.xlabel("x")
+plt.ylabel("y")
 
 plt.show()
 
