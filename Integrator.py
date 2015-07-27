@@ -22,7 +22,7 @@ def traverseBField(t, x):
     v = p/E
     dxdt[:3] = v * 2.9979e-1
 
-    B = Detector.getBField(x[:3])
+    B = Detector.getBField(x[0],x[1],x[2])
 
     dxdt[3:] = (89.8755) * Params.Q * np.cross(v,B)
 

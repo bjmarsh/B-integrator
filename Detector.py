@@ -4,18 +4,49 @@
 import numpy as np
 import Params
 
-def getMaterial(r):
+def LoadBField(fname):
+    
+    x = np.arange(-Params.RMAX, Params.RMAX+1e-10, Params.DR)
+    z = np.arange(Params.ZMIN, Params.ZMAX+1e-10, Params.DZ)
+    
+    Z,X = np.meshgrid(z,x)
 
-    if r[0]<7:
-        return 'si'
-    else:
-        return 'air'
+    Params.Bx = np.zeros(X.shape)
+    Params.By = np.zeros(X.shape)
+    Params.Bz = np.zeros(X.shape)
+    Params.Bmag = np.zeros(X.shape)
+    
+    with open(fname,'r') as fid:
+        for line in fid:
+            sp = line.strip().split()
+            if len(sp)!=4:
+                continue
+
+            r = float(sp[0])
+            z = float(sp[1])
+            phi = float(sp[2])
+            B = tuple([float (a) for a in sp[3].strip("()").split(",")])
+
+            if (phi==0 or phi==180):
+                x = r
+                if phi==180:
+                    x*=-1
+                iz = int((z+Params.ZMAX)/Params.DZ)
+                ix = int((x+Params.RMAX)/Params.DR)
+
+            Params.Bmag[ix,iz] = np.linalg.norm(B)
+            Params.Bx[ix,iz] = B[0]
+            Params.By[ix,iz] = B[1]
+            Params.Bz[ix,iz] = B[2]
+
+
+def getMaterial(r):
 
     isInsideSol = np.sqrt(r[0]**2+r[1]**2)<=Params.solRad and abs(r[2])<Params.solLength/2
     if isInsideSol:
         mat = 'fe'
     else:
-        mat = 'fe'
+        mat = 'air'
     return mat
     
 
@@ -54,35 +85,60 @@ def getScatteringParams(x, dt):
     return Xc, B+1
 
 
-def getBField(r):
+def getBField(x,y,z):
 
-    if Params.BMag==0:
-        return np.zeros(3)
-    
-    r = np.array(r)
-    m = np.array([0.,0.,1500. * Params.BMag/3.856])
-    
-    isInsideSol = np.sqrt(r[0]**2+r[1]**2)<=Params.solRad and abs(r[2])<Params.solLength/2
+    ## correct for cm usage in bfield file
+    x *= 100
+    y *= 100
+    z *= 100
+    r = np.sqrt(x**2+y**2)
 
-    if abs(r[2])<Params.solLength/2:
-        if isInsideSol:
-            r = np.array([Params.solRad,0,0])
-        else:
-            r = np.array([np.sqrt(r[0]**2+r[1]**2), 0, 0])
-            #r = np.array([Params.solRad,0,0])
-    elif r[2]<-Params.solLength/2:
-        r[2] = r[2]+Params.solLength/2
-    elif r[2]>Params.solLength/2:
-        r[2] = r[2]-Params.solLength/2
+    if z>Params.ZMIN and z<Params.ZMAX and r<Params.RMAX:
 
-    mag = np.linalg.norm(r)
-    # if mag<Params.solRad:
-    #     mag = Params.solRad
+        r = np.sqrt(x**2+y**2)
         
-    B = 3.0*r*np.dot(m,r)/mag**5 - m/mag**3
+        nearR = int(Params.DR*round(r/Params.DR))
+        nearZ = int(Params.DZ*round(z/Params.DZ))
+        
+        ir = (nearR+Params.RMAX)/Params.DR
+        iz = (nearZ+Params.ZMAX)/Params.DZ
+        
+        Bx = Params.Bx[ir,iz]
+        By = Params.By[ir,iz]
+        Bz = Params.Bz[ir,iz]
+    
+        return np.array([Bx,By,Bz])
 
-    if isInsideSol:
-        B = -B
+    else:
+        return np.zeros(3)
 
-    return B
+    # if Params.BMag==0:
+    #     return np.zeros(3)
+    
+    # r = np.array(r)
+    # m = np.array([0.,0.,1500. * Params.BMag/3.856])
+    
+    # isInsideSol = np.sqrt(r[0]**2+r[1]**2)<=Params.solRad and abs(r[2])<Params.solLength/2
+
+    # if abs(r[2])<Params.solLength/2:
+    #     if isInsideSol:
+    #         r = np.array([Params.solRad,0,0])
+    #     else:
+    #         r = np.array([np.sqrt(r[0]**2+r[1]**2), 0, 0])
+    #         #r = np.array([Params.solRad,0,0])
+    # elif r[2]<-Params.solLength/2:
+    #     r[2] = r[2]+Params.solLength/2
+    # elif r[2]>Params.solLength/2:
+    #     r[2] = r[2]-Params.solLength/2
+
+    # mag = np.linalg.norm(r)
+    # # if mag<Params.solRad:
+    # #     mag = Params.solRad
+        
+    # B = 3.0*r*np.dot(m,r)/mag**5 - m/mag**3
+
+    # if isInsideSol:
+    #     B = -B
+
+    # return B
 

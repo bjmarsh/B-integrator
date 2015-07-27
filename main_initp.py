@@ -7,69 +7,9 @@ import Integrator
 import Detector
 import Params
 
-print "\nB-field at center:", Detector.getBField([0,0,0]), '\n'
+Detector.LoadBField("bfield/bfield.txt")
 
-# p0 = [15000., 0, 10000.] ## in MeV
-# print "Initial p:",np.linalg.norm(p0),"MeV"
-
-# # initial position and momentum
-# x0 = np.array([0,0,0]+p0)
-
-### Plot z-crossing as a function of dt
-
-# dtVals = np.arange(0.01, 5.01+1e-10, 0.01)
-# zVals = []
-
-# for dt in dtVals:
-#     # print "dt =", dt
-#     nsteps = int(10000 * .01/dt)
-#     traj = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
-#     #if dt==.01:
-#     bestTraj=traj.copy()
-#     crossInd = -1
-#     for i in range(traj.shape[1]-1):
-#         if traj[0,i]<20 and traj[0,i+1]>20:
-#             crossInd = i
-#             break
-#     if crossInd==-1:
-#         print "Warning: not enough steps at dt =", dt
-#         break
-#     crossZ = traj[2,crossInd] + (20-traj[0,crossInd])/(traj[0,crossInd+1]-traj[0,crossInd]) * \
-#                                 (traj[2,crossInd+1]-traj[2,crossInd])
-#     zVals.append(crossZ)
-
-# plt.figure(1)
-# plt.plot(dtVals,zVals)
-# plt.xlabel(r"dt")
-# plt.ylabel(r"z")
-
-### plot y as a function of t
-
-# bestTraj = Integrator.rk4(x0, Integrator.traverseBField, 0.1, 1000)
-# time = np.arange(0,100+1e-10,.1)
-# plt.figure(1)
-# plt.plot(time,bestTraj[1,:])
-
-### histogram of z-crossing vals
-
-# zVals = []
-# dt = 0.1
-# for i in range(200):
-#     bestTraj = Integrator.rk4(x0, Integrator.traverseBField, dt, 800)
-#     crossInd = -1
-#     for i in range(bestTraj.shape[1]-1):
-#         if bestTraj[0,i]<20 and bestTraj[0,i+1]>20:
-#             crossInd = i
-#             break
-#     if crossInd==-1:
-#         print "Warning: not enough steps at dt =", dt
-#         break
-#     crossZ = bestTraj[2,crossInd] + (20-bestTraj[0,crossInd])/(bestTraj[0,crossInd+1]-bestTraj[0,crossInd]) * \
-#                                     (bestTraj[2,crossInd+1]-bestTraj[2,crossInd])
-#     zVals.append(crossZ)
-    
-# plt.figure(1)
-# plt.hist(zVals, bins=20, histtype='stepfilled')
+print "\nDone loading B-field...\nB-field at center:", Detector.getBField(0,0,0), '\n'
 
 # define the initial momenta (in MeV)
 init_p = []
@@ -84,8 +24,8 @@ print 'Initial Momenta (colors r,g,b,c):'
 for i in range(len(init_p)):
     print ' -',round(np.linalg.norm(init_p[i])/1000, 1), "GeV"
 
-dt = 0.1
-nsteps = 1000
+dt = 0.2
+nsteps = 250
 
 trajs = list(range(len(init_p)))
 trajs_noMSC = list(range(len(init_p)))
@@ -108,27 +48,20 @@ plt.title('Difference in z-coordinate vs. t (with/without MSC)')
 fig = plt.figure(2, figsize=(11,5.5))
 
 ## xz slice
-x = np.linspace(-20,20,21)
-z = np.linspace(-30,30,21)
-
-(X,Z) = np.meshgrid(x,z)
-
-Bzy = np.zeros(X.shape)
-Bxy = np.zeros(X.shape)
-
-for i in range(X.shape[0]):
-    for j in range(X.shape[1]):
-        B = Detector.getBField(np.array([X[i,j],0,Z[i,j]]))
-        if np.linalg.norm(B)==0:
-            continue
-        Bxy[i,j] = B[0]/np.linalg.norm(B)
-        Bzy[i,j] = B[2]/np.linalg.norm(B)
-
+x = np.arange(-Params.RMAX, Params.RMAX+1e-10, Params.DR)/100
+z = np.arange(Params.ZMIN, Params.ZMAX+1e-10, Params.DZ)/100
+    
+Z,X = np.meshgrid(z,x)
 
 plt.subplot(1,2,1)
+
 # draw mag field
-if Params.BMag != 0:
-    plt.quiver(Z,X,Bzy,Bxy)
+
+bmplot = plt.pcolor(Z,X,Params.Bmag,cmap='jet')
+bmcb = plt.colorbar(bmplot, orientation='horizontal')
+
+#if np.linalg.norm(Detector.getBField(0,0,0)) != 0:
+#    plt.quiver(Z,X,Bzy,Bxy)
 
 sl = Params.solLength
 sr = Params.solRad
@@ -141,7 +74,7 @@ plt.plot([sl/2, sl/2, -sl/2, -sl/2, sl/2],
 for i in range(len(init_p)):
     plt.plot(trajs[i][2,:],trajs[i][0,:],'-', linewidth=2, color=colors[i])
 
-plt.axis([-30,30,-20,20])
+plt.axis([-15,15,-9,9])
 plt.xlabel("z (m)")
 plt.ylabel("x (m)")
 
@@ -157,7 +90,7 @@ plt.plot(sr*np.cos(t),sr*np.sin(t), '-')
 for i in range(len(init_p)):
     plt.plot(trajs[i][0,:],trajs[i][1,:],'-', linewidth=2, color=colors[i])
 
-plt.axis([-20,20,-20,20])
+plt.axis([-9,9,-9,9])
 plt.xlabel("x (m)")
 plt.ylabel("y (m)")
 
@@ -183,9 +116,9 @@ for i in range(8):
     y = sr*np.sin(th)
     ax.plot(xs=[x,x], ys=[y,y], zs=[-sl/2, sl/2], color='k')
 
-ax.set_xlim(-20,20)
-ax.set_ylim(-20,20)
-ax.set_zlim(-30,30)
+ax.set_xlim(-9,9)
+ax.set_ylim(-9,9)
+ax.set_zlim(-15,15)
 plt.show()
 
 
