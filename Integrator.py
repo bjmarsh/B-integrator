@@ -35,6 +35,9 @@ def rk4(x0, update_func, dt, nsteps, cutoff=None, cutoffaxis=None):
     # update func is as in dx/dt = update_func(x,t)
     # return value is an N by nsteps+1 array, where N is the size of x0
     # each column is x at the next time step
+    #
+    # option to cutoff integration once particle reaches certain coordinate
+    # along the cutoff axis. 0,1,2 correspond to x,y,z axes. 3 is radial.
 
     if cutoff!=None and cutoffaxis==None:
         print "Warning: cutoff axis not specified! Not using cutoff"
@@ -61,9 +64,12 @@ def rk4(x0, update_func, dt, nsteps, cutoff=None, cutoffaxis=None):
             dx_MS = multipleScatterKuhn(x[:,i], dt)
 
         x[:,i+1] = x[:,i] + dx_Bfield + dx_MS
-
-        if cutoff!=None and x[cutoffaxis,i+1]>=cutoff:
-            return x[:,:i+2]
+        
+        if cutoff!=None:
+            if cutoffaxis==3 and x[0,i+1]**2+x[1,i+1]**2>=cutoff**2:
+                return x[:,:i+2]
+            elif 0<=cutoffaxis<=2 and x[cutoffaxis,i+1]>=cutoff:
+                return x[:,:i+2]
 
         t += dt
         

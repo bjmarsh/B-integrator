@@ -6,15 +6,15 @@ import Params
 
 def LoadBField(fname):
     
-    x = np.arange(-Params.RMAX, Params.RMAX+1e-10, Params.DR)
-    z = np.arange(Params.ZMIN, Params.ZMAX+1e-10, Params.DZ)
-    
-    Z,X = np.meshgrid(z,x)
+    NR = Params.RMAX/Params.DR + 1
+    NZ = (Params.ZMAX-Params.ZMIN)/Params.DZ + 1
+    NPHI = (Params.PHIMAX-Params.PHIMIN)/Params.DPHI + 1
 
-    Params.Bx = np.zeros(X.shape)
-    Params.By = np.zeros(X.shape)
-    Params.Bz = np.zeros(X.shape)
-    Params.Bmag = np.zeros(X.shape)
+
+    Params.Bx   = np.zeros((NR,NZ,NPHI))
+    Params.By   = np.zeros((NR,NZ,NPHI))
+    Params.Bz   = np.zeros((NR,NZ,NPHI))
+    Params.Bmag = np.zeros((NR,NZ,NPHI))
     
     with open(fname,'r') as fid:
         for line in fid:
@@ -27,32 +27,43 @@ def LoadBField(fname):
             phi = float(sp[2])
             B = tuple([float (a) for a in sp[3].strip("()").split(",")])
 
-            if (phi==0 or phi==180):
-                x = r
-                if phi==180:
-                    x*=-1
-                iz = int((z+Params.ZMAX)/Params.DZ)
-                ix = int((x+Params.RMAX)/Params.DR)
+            iz = int((z-Params.ZMIN)/Params.DZ)
+            ir = int(r/Params.DR)
+            iphi = int((phi-Params.PHIMIN)/Params.DPHI)
 
-            Params.Bmag[ix,iz] = np.linalg.norm(B)
-            Params.Bx[ix,iz] = B[0]
-            Params.By[ix,iz] = B[1]
-            Params.Bz[ix,iz] = B[2]
+            Params.Bmag[ir,iz,iphi] = np.linalg.norm(B)
+            Params.Bx[ir,iz,iphi] = B[0]
+            Params.By[ir,iz,iphi] = B[1]
+            Params.Bz[ir,iz,iphi] = B[2]
 
 
-def getMaterial(r):
+def getMaterial(x,y,z):
 
-    isInsideSol = np.sqrt(r[0]**2+r[1]**2)<=Params.solRad and abs(r[2])<Params.solLength/2
-    if isInsideSol:
+    withinLength = -Params.solLength/2 < z < Params.solLength/2
+    r = np.sqrt(x**2+y**2)
+
+    if not withinLength:
+        return 'air'
+    
+    if r < 1.3:
+        mat = 'si'
+    elif r < 2.0:
+        mat = 'pbwo4'
+    elif r < 2.95:
+        mat = 'fe'
+    elif r < 3.5:
+        mat = 'fe'
+    elif r < 7.2:
         mat = 'fe'
     else:
         mat = 'air'
+
     return mat
     
 
 def getScatteringParams(x, dt):
 
-    mat = getMaterial(x[:3])
+    mat = getMaterial(x[0],x[1],x[2])
 
     Z,A,rho,X0 = Params.materials[mat]
 
@@ -87,6 +98,9 @@ def getScatteringParams(x, dt):
 
 def getBField(x,y,z):
 
+    if not Params.BFieldOn:
+        return np.zeros(3)
+
     ## correct for cm usage in bfield file
     x *= 100
     y *= 100
@@ -96,16 +110,23 @@ def getBField(x,y,z):
     if z>Params.ZMIN and z<Params.ZMAX and r<Params.RMAX:
 
         r = np.sqrt(x**2+y**2)
+        phi = np.arctan2(y,x) * 180/np.pi
         
         nearR = int(Params.DR*round(r/Params.DR))
         nearZ = int(Params.DZ*round(z/Params.DZ))
+        nearPHI = int(Params.DPHI*round(phi/Params.DPHI))
         
-        ir = (nearR+Params.RMAX)/Params.DR
-        iz = (nearZ+Params.ZMAX)/Params.DZ
+        if nearPHI==360:
+            nearPHI = 0
+
+
+        ir = nearR/Params.DR
+        iz = (nearZ-Params.ZMIN)/Params.DZ
+        iphi = (nearPHI-Params.PHIMIN)/Params.DPHI
         
-        Bx = Params.Bx[ir,iz]
-        By = Params.By[ir,iz]
-        Bz = Params.Bz[ir,iz]
+        Bx = Params.Bx[ir,iz,iphi]
+        By = Params.By[ir,iz,iphi]
+        Bz = Params.Bz[ir,iz,iphi]
     
         return np.array([Bx,By,Bz])
 

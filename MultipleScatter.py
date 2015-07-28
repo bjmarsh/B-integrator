@@ -102,7 +102,7 @@ def getScatterAnglePDG(x, dt):
     ## and transverse displacement y for the given momentum. This is taken
     ## from the PDG review chapter on the Passage of Particles through Matter
 
-    mat = Detector.getMaterial(x[:3])
+    mat = Detector.getMaterial(x[0],x[1],x[2])
 
     X0 = Params.materials[mat][3]
 

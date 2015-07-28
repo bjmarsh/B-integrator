@@ -13,7 +13,8 @@ print "\nDone loading B-field...\nB-field at center:", Detector.getBField(0,0,0)
 
 # define the initial momenta (in MeV)
 init_p = []
-init_p.append([4800, 0, 2000])
+init_p.append([2000, 0, 0])
+#init_p.append([4800, 0, 2000])
 init_p.append([10000, 0, 0])
 init_p.append([10000, 5000, 17000])
 init_p.append([30000, 40000, 5000])
@@ -45,7 +46,7 @@ plt.xlabel('time (ns)')
 plt.ylabel('Difference (m)')
 plt.title('Difference in z-coordinate vs. t (with/without MSC)')
 
-fig = plt.figure(2, figsize=(11,5.5))
+fig = plt.figure(2, figsize=(14.5,5.5))
 
 ## xz slice
 x = np.arange(-Params.RMAX, Params.RMAX+1e-10, Params.DR)/100
@@ -53,22 +54,19 @@ z = np.arange(Params.ZMIN, Params.ZMAX+1e-10, Params.DZ)/100
     
 Z,X = np.meshgrid(z,x)
 
-plt.subplot(1,2,1)
+plt.subplot2grid((1,5),(0,0),colspan=3)
 
 # draw mag field
 
-bmplot = plt.pcolor(Z,X,Params.Bmag,cmap='jet')
-bmcb = plt.colorbar(bmplot, orientation='horizontal')
+mag = np.append(Params.Bmag[::-1,:,0],Params.Bmag[1:,:,180/Params.DPHI],0)
+bmplot = plt.pcolor(Z,X,mag,cmap='afmhot',vmax=5.0)
+#bmcb = plt.colorbar(bmplot, orientation='horizontal')
 
 #if np.linalg.norm(Detector.getBField(0,0,0)) != 0:
 #    plt.quiver(Z,X,Bzy,Bxy)
 
 sl = Params.solLength
 sr = Params.solRad
-
-# draw solenoid outline
-plt.plot([sl/2, sl/2, -sl/2, -sl/2, sl/2], 
-         [-sr, sr, sr, -sr, -sr], '-')
 
 # draw trajectory
 for i in range(len(init_p)):
@@ -80,7 +78,7 @@ plt.ylabel("x (m)")
 
 ## xy slice
 
-plt.subplot(1,2,2)
+plt.subplot2grid((1,5),(0,3), colspan=2)
 
 # draw solenoid outline
 t = np.linspace(0, 2*np.pi, 100)
