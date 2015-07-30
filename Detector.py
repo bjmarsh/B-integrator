@@ -61,41 +61,6 @@ def getMaterial(x,y,z):
     return mat
     
 
-def getScatteringParams(x, dt):
-
-    mat = getMaterial(x[0],x[1],x[2])
-
-    Z,A,rho,X0 = Params.materials[mat]
-
-    z = Params.Q
-
-    p = x[3:]
-    magp = np.linalg.norm(p)
-    v = p/np.sqrt(magp**2 + Params.m**2)
-    beta = np.linalg.norm(v)
-
-    ds = beta * 2.9979e1 * dt
-
-    Xc = np.sqrt(0.1569 * z**2 * Z*(Z+1) * rho * ds / (magp**2 * beta**2 * A))
-    b = np.log(6700*z**2*Z**(1./3)*(Z+1)*rho*ds/A / (beta**2+1.77e-4*z**2*Z**2))
-
-    ## we want to solve the equation B-log(B) = b. Using Newton-Raphson
-
-    B = b
-    prevB = 2*B
-    
-    f = lambda x: x-np.log(x)-b
-    fp = lambda x: 1-1./x
-
-    while abs((B-prevB)/prevB)>0.001:
-        prevB = B
-        B = B - f(B)/fp(B)
-
-        
-    # use B+1 for correction at intermediate angles
-    return Xc, B+1
-
-
 def getBField(x,y,z):
 
     if not Params.BFieldOn:

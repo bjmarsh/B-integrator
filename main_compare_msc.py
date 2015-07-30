@@ -35,9 +35,12 @@ for i in range(200000):
 plt.figure(1)
 
 #w = 1./200000*np.ones(200000)
-plt.hist(thValsKuhn, range=(0,.4), bins=30, log=True, alpha=0.5, histtype='stepfilled')
-plt.hist(thValsPDG,  range=(0,.4), bins=30, log=True, alpha=0.5, histtype='stepfilled')
-plt.axis([0,.4,1,1e5])
+plt.hist(thValsKuhn, range=(0,.5), bins=90, log=False, alpha=0.4, histtype='stepfilled', label='Kuhn')
+plt.hist(thValsPDG,  range=(0,.5), bins=90, log=False, alpha=0.4, histtype='stepfilled', label='PDG')
+#plt.axis([0,.5,5e-1,1e5])
+plt.xlabel('Angle (deg)')
+plt.title('Scattering Angle through 6 cm of Si')
+plt.legend()
 
 print "Finished dtheta distribution"
 

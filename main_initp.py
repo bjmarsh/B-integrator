@@ -9,17 +9,28 @@ import Params
 
 Detector.LoadBField("bfield/bfield.txt")
 
-print "\nDone loading B-field...\nB-field at center:", Detector.getBField(0,0,0), '\n'
+#Params.BFieldOn = False
+Params.Q = 1.0
+Params.MSCtype = 'kuhn'
+
+#print "\nDone loading B-field...\nB-field at center:", Detector.getBField(0,0,0), '\n'
+
 
 # define the initial momenta (in MeV)
 init_p = []
-init_p.append([2000, 0, 0])
-#init_p.append([4800, 0, 2000])
-init_p.append([10000, 0, 0])
-init_p.append([10000, 5000, 17000])
-init_p.append([30000, 40000, 5000])
+#init_p.append([1000, 0, 0])
+# init_p.append([4800, 0, 2000])
+# init_p.append([10000, 0, 0])
+# init_p.append([10000, 5000, 17000])
+# init_p.append([30000, 40000, 5000])
 
-colors = ['r', 'g', 'b', 'c']
+init_p.append([2000,0,0])
+init_p.append([3000,0,0])
+init_p.append([5000,0,0])
+init_p.append([10000,0,0])
+init_p.append([20000,0,0])
+
+colors = ['r', 'g', 'b', 'c', 'm']
 
 print 'Initial Momenta (colors r,g,b,c):'
 for i in range(len(init_p)):
@@ -58,12 +69,13 @@ plt.subplot2grid((1,5),(0,0),colspan=3)
 
 # draw mag field
 
-mag = np.append(Params.Bmag[::-1,:,0],Params.Bmag[1:,:,180/Params.DPHI],0)
-bmplot = plt.pcolor(Z,X,mag,cmap='afmhot',vmax=5.0)
-#bmcb = plt.colorbar(bmplot, orientation='horizontal')
-
-#if np.linalg.norm(Detector.getBField(0,0,0)) != 0:
-#    plt.quiver(Z,X,Bzy,Bxy)
+if Params.BFieldOn:
+    mag = np.append(Params.Bmag[::-1,:,0],Params.Bmag[1:,:,180/Params.DPHI],0)
+    bmplot = plt.pcolor(Z,X,mag,cmap='afmhot',vmax=5.0)
+    #bmcb = plt.colorbar(bmplot, orientation='horizontal')
+    
+    #if np.linalg.norm(Detector.getBField(0,0,0)) != 0:
+    #    plt.quiver(Z,X,Bzy,Bxy)
 
 sl = Params.solLength
 sr = Params.solRad
