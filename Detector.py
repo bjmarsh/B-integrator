@@ -1,11 +1,17 @@
 ## Detector.py
 ## methods relating to detector and environment properties
 
+import cPickle as pickle
 import numpy as np
 import Params
 
 def LoadBField(fname):
     
+    if Params.BFieldUsePickle:
+        Params.Bx,Params.By,Params.Bz,Params.Bmag = pickle.load(open(fname,"rb"))
+        Params.BFieldLoaded = True
+        return
+
     NR = Params.RMAX/Params.DR + 1
     NZ = (Params.ZMAX-Params.ZMIN)/Params.DZ + 1
     NPHI = (Params.PHIMAX-Params.PHIMIN)/Params.DPHI + 1
@@ -36,6 +42,9 @@ def LoadBField(fname):
             Params.By[ir,iz,iphi] = B[1]
             Params.Bz[ir,iz,iphi] = B[2]
 
+    Params.BFieldLoaded = True
+
+
 
 def getMaterial(x,y,z):
 
@@ -47,11 +56,11 @@ def getMaterial(x,y,z):
     
     if r < 1.3:
         mat = 'si'
-    elif r < 2.0:
+    elif r < 1.8:
         mat = 'pbwo4'
     elif r < 2.95:
         mat = 'fe'
-    elif r < 3.5:
+    elif r < 4.0:
         mat = 'fe'
     elif r < 7.2:
         mat = 'fe'
@@ -63,8 +72,18 @@ def getMaterial(x,y,z):
 
 def getBField(x,y,z):
 
-    if not Params.BFieldOn:
+    if Params.BFieldType.lower() == 'none':
         return np.zeros(3)
+
+    if Params.BFieldType.lower() == 'uniform':
+        return np.array([0.,0.,1.])
+
+    if Params.BFieldType.lower() == 'updown':
+        r = np.sqrt(x**2+y**2)
+        if r<4:
+            return np.array([0,0,3])
+        else:
+            return np.array([0,0,-3])/r
 
     ## correct for cm usage in bfield file
     x *= 100
@@ -76,6 +95,9 @@ def getBField(x,y,z):
 
         r = np.sqrt(x**2+y**2)
         phi = np.arctan2(y,x) * 180/np.pi
+
+        if phi<0:
+            phi += 360
         
         nearR = int(Params.DR*round(r/Params.DR))
         nearZ = int(Params.DZ*round(z/Params.DZ))
@@ -83,7 +105,6 @@ def getBField(x,y,z):
         
         if nearPHI==360:
             nearPHI = 0
-
 
         ir = nearR/Params.DR
         iz = (nearZ-Params.ZMIN)/Params.DZ
@@ -97,34 +118,3 @@ def getBField(x,y,z):
 
     else:
         return np.zeros(3)
-
-    # if Params.BMag==0:
-    #     return np.zeros(3)
-    
-    # r = np.array(r)
-    # m = np.array([0.,0.,1500. * Params.BMag/3.856])
-    
-    # isInsideSol = np.sqrt(r[0]**2+r[1]**2)<=Params.solRad and abs(r[2])<Params.solLength/2
-
-    # if abs(r[2])<Params.solLength/2:
-    #     if isInsideSol:
-    #         r = np.array([Params.solRad,0,0])
-    #     else:
-    #         r = np.array([np.sqrt(r[0]**2+r[1]**2), 0, 0])
-    #         #r = np.array([Params.solRad,0,0])
-    # elif r[2]<-Params.solLength/2:
-    #     r[2] = r[2]+Params.solLength/2
-    # elif r[2]>Params.solLength/2:
-    #     r[2] = r[2]-Params.solLength/2
-
-    # mag = np.linalg.norm(r)
-    # # if mag<Params.solRad:
-    # #     mag = Params.solRad
-        
-    # B = 3.0*r*np.dot(m,r)/mag**5 - m/mag**3
-
-    # if isInsideSol:
-    #     B = -B
-
-    # return B
-

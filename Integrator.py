@@ -6,6 +6,37 @@ import Detector
 from MultipleScatter import *
 import Params
 
+def doEnergyLoss(x, dt):
+    ## returns new x after losing proper amount of energy according to Bethe-Bloch
+
+    p = x[3:]
+    magp = np.linalg.norm(p)
+    E = np.sqrt(magp**2+Params.m**2)
+    gamma = E/Params.m
+    beta = magp/E;
+    me = 0.511;  #electron mass in MeV
+    
+    Wmax = 2*me*beta**2*gamma**2/(1+2*gamma*me/Params.m + (me/Params.m)**2)
+    K = 0.307075  # in MeV cm^2/mol
+
+    Z,A,rho,X0,I = Params.materials[Detector.getMaterial(x[0],x[1],x[2])]
+
+    I = I/1e6  ## convert from eV to MeV
+
+    # mean energy loss in MeV/cm
+    dEdx = K*rho*Params.Q**2*Z/A/beta**2*(0.5*np.log(2*me*beta**2*gamma**2*Wmax/I**2) - beta**2)
+
+    dE = dEdx * beta*2.9979e1 * dt
+
+    if dE>(E-Params.m):
+        print "Warning: stopped particle!"
+        return np.zeros(6)
+
+    newmagp = np.sqrt((E-dE)**2-Params.m**2)
+    x[3:] = p*newmagp/magp
+
+    return x
+
 def traverseBField(t, x):
     # x is a 6-element vector (x,y,z,px,py,pz)
     # returns dx/dt
@@ -55,6 +86,7 @@ def rk4(x0, update_func, dt, nsteps, cutoff=None, cutoffaxis=None):
         k3 = update_func(t+dt/2., x[:,i]+dt*k2/2.)
         k4 = update_func(t+dt, x[:,i]+dt*k3)
         dx_Bfield = dt/6. * (k1 + 2*k2 + 2*k3 + k4)
+        #dx_Bfield = dt * k1
 
         # add on the effect of MSC if desired
         dx_MS = np.zeros(x0.size)
@@ -63,7 +95,15 @@ def rk4(x0, update_func, dt, nsteps, cutoff=None, cutoffaxis=None):
         elif Params.MSCtype.lower()=='kuhn':
             dx_MS = multipleScatterKuhn(x[:,i], dt)
 
+
         x[:,i+1] = x[:,i] + dx_Bfield + dx_MS
+
+        if Params.EnergyLossOn:
+            x[:,i+1] = doEnergyLoss(x[:,i+1], dt)
+
+            # check if particle has stopped
+            if np.all(x[:,i+1]==0):
+                return x[:,:i+1]
         
         if cutoff!=None:
             if cutoffaxis==3 and x[0,i+1]**2+x[1,i+1]**2>=cutoff**2:

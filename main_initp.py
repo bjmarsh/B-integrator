@@ -6,12 +6,14 @@ import math
 import Integrator
 import Detector
 import Params
+import Drawing
 
-Detector.LoadBField("bfield/bfield.txt")
+Detector.LoadBField("bfield/bfield.pkl")
 
-#Params.BFieldOn = False
+Params.BFieldType = 'updown'
 Params.Q = 1.0
-Params.MSCtype = 'kuhn'
+scatterType = 'none'
+Params.MSCtype = scatterType
 
 #print "\nDone loading B-field...\nB-field at center:", Detector.getBField(0,0,0), '\n'
 
@@ -24,11 +26,11 @@ init_p = []
 # init_p.append([10000, 5000, 17000])
 # init_p.append([30000, 40000, 5000])
 
-init_p.append([2000,0,0])
 init_p.append([3000,0,0])
-init_p.append([5000,0,0])
 init_p.append([10000,0,0])
-init_p.append([20000,0,0])
+init_p.append([15000,0,0])
+init_p.append([30000,0,0])
+init_p.append([50000,0,0])
 
 colors = ['r', 'g', 'b', 'c', 'm']
 
@@ -44,14 +46,17 @@ trajs_noMSC = list(range(len(init_p)))
 
 for i in range(len(init_p)):
     x0 = np.array([0,0,0]+init_p[i])
-    trajs[i] = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
+    Params.MSCtype = 'none'
     trajs_noMSC[i] = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
+    Params.MSCtype = scatterType
+    trajs[i] = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
 
 plt.figure(1)
 
 time = np.arange(0,dt*nsteps+1e-10, dt)
 for i in range(len(init_p)):
-    plt.plot(time, trajs[i][2,:]-trajs_noMSC[i][2,:], color=colors[i])
+    maxI = min(trajs[i].shape[1], trajs_noMSC[i].shape[1])
+    plt.plot(time[:maxI], trajs[i][2,:maxI]-trajs_noMSC[i][2,:maxI], color=colors[i])
 
 plt.xlabel('time (ns)')
 plt.ylabel('Difference (m)')
@@ -69,7 +74,7 @@ plt.subplot2grid((1,5),(0,0),colspan=3)
 
 # draw mag field
 
-if Params.BFieldOn:
+if Params.BFieldLoaded:
     mag = np.append(Params.Bmag[::-1,:,0],Params.Bmag[1:,:,180/Params.DPHI],0)
     bmplot = plt.pcolor(Z,X,mag,cmap='afmhot',vmax=5.0)
     #bmcb = plt.colorbar(bmplot, orientation='horizontal')
@@ -92,13 +97,18 @@ plt.ylabel("x (m)")
 
 plt.subplot2grid((1,5),(0,3), colspan=2)
 
-# draw solenoid outline
-t = np.linspace(0, 2*np.pi, 100)
-plt.plot(sr*np.cos(t),sr*np.sin(t), '-')
+Drawing.DrawXYslice(trajs,ax=plt.gca())
 
-# draw trajectory
-for i in range(len(init_p)):
-    plt.plot(trajs[i][0,:],trajs[i][1,:],'-', linewidth=2, color=colors[i])
+# draw dotted lines to make figure for slides
+pf = trajs[0][3:,-1]
+xf = trajs[0][:3,-1]
+t = -np.dot(pf,xf)/np.dot(pf,pf)
+xi = xf+1.4*t*pf
+plt.plot([xi[0],xf[0]],[xi[1],xf[1]],'--g')
+plt.plot([-4,9],[0,0],'--g')
+xi = xf+t*pf
+plt.plot([0,xi[0]],[0,xi[1]],'-m')
+plt.text(-0.08,-0.6,r'b', size='large')
 
 plt.axis([-9,9,-9,9])
 plt.xlabel("x (m)")
@@ -106,29 +116,11 @@ plt.ylabel("y (m)")
 
 ## 3d view
 
-from mpl_toolkits.mplot3d import Axes3D
 fig = plt.figure(num=3, figsize=(8, 8))
-ax = fig.add_subplot(111, projection='3d')
 
-for i in range(len(init_p)):
-    ax.plot3D(xs=trajs[i][0,:], ys=trajs[i][1,:], zs=trajs[i][2,:], color=colors[i])
+Drawing.Draw3Dtrajs(trajs)
 
-ax.set_xlabel('x (m)')
-ax.set_ylabel('y (m)')
-ax.set_zlabel('z (m)')
 
-t = np.linspace(0, 2*np.pi, 100)
-ax.plot(xs=sr*np.cos(t), ys=sr*np.sin(t), zs=sl/2, color='k')
-ax.plot(xs=sr*np.cos(t), ys=sr*np.sin(t), zs=-sl/2, color='k')
-for i in range(8):
-    th = i * 2*np.pi/8
-    x = sr*np.cos(th)
-    y = sr*np.sin(th)
-    ax.plot(xs=[x,x], ys=[y,y], zs=[-sl/2, sl/2], color='k')
-
-ax.set_xlim(-9,9)
-ax.set_ylim(-9,9)
-ax.set_zlim(-15,15)
 plt.show()
 
 

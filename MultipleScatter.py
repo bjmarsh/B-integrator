@@ -45,7 +45,7 @@ def getKuhnScatteringParams(x, dt):
 
     mat = Detector.getMaterial(x[0],x[1],x[2])
 
-    Z,A,rho,X0 = Params.materials[mat]
+    Z,A,rho,X0,I = Params.materials[mat]
 
     z = Params.Q
 
