@@ -118,3 +118,45 @@ def getBField(x,y,z):
 
     else:
         return np.zeros(3)
+
+def FindIntersection(traj, detectorDict):
+    # find the intersection with a plane with normal norm
+    # and distance to origin dist. returns None if no intersection
+
+    norm = detectorDict["norm"]
+    dist = detectorDict["dist"]
+
+    for i in range(traj.shape[1]-1):
+        p1 = traj[:3,i]
+        p2 = traj[:3,i+1]
+        
+        proj2 = np.dot(p2,norm)
+
+        if proj2>=dist:
+            proj1 = np.dot(p1,norm)
+            intersect = p1+(dist-proj1)/(proj2-proj1)*(p2-p1)
+
+            vert = detectorDict["vert"]
+            orth = detectorDict["orth"]
+            center = norm*dist
+            
+            if abs(np.dot(intersect-center,orth)) < detectorDict["width"]/2 and \
+               abs(np.dot(intersect-center,vert)) < detectorDict["height"]/2:
+                theta = np.arccos(np.dot(p2-p1,norm)/np.linalg.norm(p2-p1))
+                return intersect,theta
+
+            break
+
+    return None, None
+
+
+
+
+
+
+
+
+
+
+
+

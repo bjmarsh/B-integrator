@@ -76,5 +76,54 @@ def DrawXYslice(trajs, colors=None, ax=None, fig=None, subplot=111):
     ax.set_xlim((-9,9))
     ax.set_ylim((-9,9))
 
+def DrawXZslice(trajs, colors=None, ax=None, fig=None, subplot=111, drawBField=None):
+    # draws projected trajectories in z=0 plane
+    # see above for argument descriptions
 
+    if ax == None:
+        if fig==None:
+            fig = plt.gcf()
+        ax = fig.add_subplot(subplot)
+
+    if colors==None:
+        colors = ['r','g','b','c','m','y']
+
+    if drawBField==None:
+        if Params.BFieldLoaded:
+            drawBField = True
+        else:
+            drawBField = False
+
+    nc = len(colors)
+
+    # draw B field
+    x = np.arange(-Params.RMAX, Params.RMAX+1e-10, Params.DR)/100
+    z = np.arange(Params.ZMIN, Params.ZMAX+1e-10, Params.DZ)/100
+    Z,X = np.meshgrid(z,x)
+
+    mag = np.append(Params.Bmag[::-1,:,0],Params.Bmag[1:,:,180/Params.DPHI],0)
+    bmplot = plt.pcolor(Z,X,mag,cmap='afmhot',vmax=5.0)
+
+    # draw trajectories
+    for i in range(len(trajs)):
+        plt.plot(trajs[i][2,:],trajs[i][0,:],'-', linewidth=2, color=colors[i%nc])
+
+    plt.xlabel("z (m)")
+    plt.ylabel("x (m)")
+
+    ax.set_xlim((-15,15))
+    ax.set_ylim((-9,9))
+
+def DrawLine(p1, p2, ax=None, is3d=False, color='k', linestyle='-', marker='None'):
+    # draws a line connecting 2 points
+
+    if ax==None:
+        ax = plt.gca()
+
+    if is3d:
+        ax.plot(xs=[p1[0],p2[0]],ys=[p1[1],p2[1]],zs=[p1[2],p2[2]], color=color, linestyle=linestyle, marker=marker)
+
+    if not is3d:
+        ax.plot([p1[0],p2[0]],[p1[1],p2[1]],color=color,linestyle=linestyle, marker=marker)
+    
 

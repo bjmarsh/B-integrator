@@ -110,6 +110,10 @@ def getScatterAngleKuhn(x, dt):
 def multipleScatterKuhn(x, dt):
     # use the method from Kuhn paper
 
+    if Detector.getMaterial(x[0],x[1],x[2])=='air':
+        return np.zeros(6)
+
+
     p = x[3:]
     theta = getScatterAngleKuhn(x, dt)
 
@@ -176,6 +180,9 @@ def getScatterAnglePDG(x, dt):
 def multipleScatterPDG(x, dt):
     # get the angles/displacements from above function and return the
     # net change in x=(x,y,z,px,py,pz)
+
+    if Detector.getMaterial(x[0],x[1],x[2])=='air':
+        return np.zeros(6)
 
     p = x[3:]
 
