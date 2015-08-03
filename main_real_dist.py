@@ -11,7 +11,7 @@ import Drawing
 
 # VIS or STATS
 mode = "STATS"
-visWithStats = True
+visWithStats = False
 
 if mode=="VIS":
     ntrajs = 15
@@ -65,6 +65,7 @@ c4 = center - detOrth*detWidth/2 + detVert*detHeight/2
 intersects = []
 
 stats = ROOT.TNtuple("stats","stats","p:eta:phi:theta")
+ntotaltrajs = 0
 
 while len(trajs)<ntrajs:
     magp = ROOT.Double(1e9)
@@ -79,22 +80,28 @@ while len(trajs)<ntrajs:
     x0 = np.array([0,0,0,p[0],p[1],p[2]])
 
     traj = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
+    ntotaltrajs += 1
     if mode=="VIS":
         trajs.append(traj)
 
     intersection, theta = Detector.FindIntersection(traj, detectorDict)
     if intersection != None:
         intersects.append(intersection)
-        print "p =",magp, ", eta =", eta, ", phi =", phi
+        print len(trajs), ": p =",magp, ", eta =", eta, ", phi =", phi
         if mode=="VIS":
             pass
         if mode=="STATS":
-            trajs.append(traj)
+            if visWithStats:
+                trajs.append(traj)
+            else:
+                trajs.append(0)
             stats.Fill(magp,eta,phi,theta)
 
 fid = ROOT.TFile("data/detectorHits/stats.root","RECREATE")
 stats.Write()
 fid.Close()
+
+print "Efficiency:", float(ntrajs)/ntotaltrajs
 
 if mode=="VIS" or visWithStats:
     plt.figure(num=1, figsize=(15,7))
