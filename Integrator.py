@@ -19,17 +19,26 @@ def doEnergyLoss(x, dt):
     Wmax = 2*me*beta**2*gamma**2/(1+2*gamma*me/Params.m + (me/Params.m)**2)
     K = 0.307075  # in MeV cm^2/mol
 
-    Z,A,rho,X0,I = Params.materials[Detector.getMaterial(x[0],x[1],x[2])]
+    mat = Detector.getMaterial(x[0],x[1],x[2])
+    Z,A,rho,X0 = Params.materials[mat]
+    I,a,k,x0,x1,Cbar,delta0 = Params.dEdx_params[mat]
 
     I = I/1e6  ## convert from eV to MeV
 
+    xp = np.log10(magp/Params.m)
+    if xp>=x1:
+        delta = 2*np.log(10)*xp - Cbar
+    elif xp>=x0:
+        delta = 2*np.log(10)*xp - Cbar + a*(x1-xp)**k
+    else:
+        delta = delta0*10**(2*(xp-x0))
+
     # mean energy loss in MeV/cm
-    dEdx = K*rho*Params.Q**2*Z/A/beta**2*(0.5*np.log(2*me*beta**2*gamma**2*Wmax/I**2) - beta**2)
+    dEdx = K*rho*Params.Q**2*Z/A/beta**2*(0.5*np.log(2*me*beta**2*gamma**2*Wmax/I**2) - beta**2 - delta/2)
 
     dE = dEdx * beta*2.9979e1 * dt
 
     if dE>(E-Params.m):
-        print "Warning: stopped particle!"
         return np.zeros(6)
 
     newmagp = np.sqrt((E-dE)**2-Params.m**2)
@@ -100,6 +109,8 @@ def rk4(x0, update_func, dt, nsteps, cutoff=None, cutoffaxis=None):
 
         if Params.EnergyLossOn:
             x[:,i+1] = doEnergyLoss(x[:,i+1], dt)
+        if not Params.SuppressStoppedWarning and np.all(x[:,i+1]==0):
+            print "Warning: stopped particle! (initial p =", round(np.linalg.norm(x[3:,0])/1000,2), "GeV)"
 
             # check if particle has stopped
             if np.all(x[:,i+1]==0):

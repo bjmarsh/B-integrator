@@ -22,7 +22,7 @@ bvals = []
 
 pvals = np.arange(2000.,20001.,100.)
 
-nth = 20.
+nth = 1.
 
 for p in pvals:
     thvals.append(0)
@@ -43,6 +43,8 @@ for p in pvals:
         thvals[-1] += th
     thvals[-1] /= nth
     bvals[-1] /= nth
+
+print thvals[-1]
         
 plt.figure(1)
 plt.plot(pvals/1000,thvals)

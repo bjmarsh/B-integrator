@@ -48,6 +48,15 @@ def LoadBField(fname):
 
 def getMaterial(x,y,z):
 
+    if Params.MatSetup == 'iron':
+        return 'fe'
+
+    if Params.MatSetup == 'sife':
+        if x<4:
+            return 'si'
+        else:
+            return 'fe'
+
     withinLength = -Params.solLength/2 < z < Params.solLength/2
     r = np.sqrt(x**2+y**2)
 
@@ -62,7 +71,7 @@ def getMaterial(x,y,z):
         mat = 'fe'
     elif r < 4.0:
         mat = 'fe'
-    elif r < 7.2:
+    elif r < 7.0:
         mat = 'fe'
     else:
         mat = 'air'
@@ -142,12 +151,20 @@ def FindIntersection(traj, detectorDict):
             
             if abs(np.dot(intersect-center,orth)) < detectorDict["width"]/2 and \
                abs(np.dot(intersect-center,vert)) < detectorDict["height"]/2:
-                theta = np.arccos(np.dot(p2-p1,norm)/np.linalg.norm(p2-p1))
-                return intersect,theta
+                unit = (p2-p1)/np.linalg.norm(p2-p1)
+                theta = np.arccos(np.dot(unit,norm))
+                
+                projOrth = np.dot(unit,orth)
+                projVert = np.dot(unit,vert)
+
+                thOrth = np.arcsin(projOrth/np.linalg.norm(unit-projVert*vert))
+                thVert = np.arcsin(projVert/np.linalg.norm(unit-projOrth*orth))
+
+                return intersect,theta,thOrth,thVert
 
             break
 
-    return None, None
+    return None, None, None, None
 
 
 

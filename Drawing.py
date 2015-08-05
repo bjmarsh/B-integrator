@@ -29,7 +29,7 @@ def Draw3Dtrajs(trajs, colors=None, ax = None, fig=None, subplot=111):
     for i in range(len(trajs)):
         ax.plot3D(xs=trajs[i][0,:], ys=trajs[i][1,:], zs=trajs[i][2,:], color=colors[i%nc])
 
-    sr, sl = 4., 26.
+    sr, sl = Params.solRad, Params.solLength
     t = np.linspace(0, 2*np.pi, 100)
     ax.plot(xs=sr*np.cos(t), ys=sr*np.sin(t), zs=sl/2, color='k')
     ax.plot(xs=sr*np.cos(t), ys=sr*np.sin(t), zs=-sl/2, color='k')
