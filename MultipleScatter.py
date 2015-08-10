@@ -47,7 +47,7 @@ def getKuhnScatteringParams(x, dt):
 
     Z,A,rho,X0 = Params.materials[mat]
 
-    z = Params.Q
+    z = abs(Params.Q)
 
     p = x[3:]
     magp = np.linalg.norm(p)
@@ -158,7 +158,7 @@ def getScatterAnglePDG(x, dt):
         return np.zeros(6)
 
     # rms of projected theta distribution.
-    theta0 = 13.6/(beta*magp) * Params.Q * np.sqrt(dx/X0) * (1 + 0.038*np.log(dx/X0))
+    theta0 = 13.6/(beta*magp) * abs(Params.Q) * np.sqrt(dx/X0) * (1 + 0.038*np.log(dx/X0))
     
     # correlation coefficient between theta_plane and y_plane
     rho = 0.87

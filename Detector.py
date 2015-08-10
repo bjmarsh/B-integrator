@@ -145,22 +145,25 @@ def FindIntersection(traj, detectorDict):
             proj1 = np.dot(p1,norm)
             intersect = p1+(dist-proj1)/(proj2-proj1)*(p2-p1)
 
-            vert = detectorDict["vert"]
-            orth = detectorDict["orth"]
+            vHat = detectorDict["v"]
+            wHat = detectorDict["w"]
             center = norm*dist
+
+            w = np.dot(intersect,wHat)
+            v = np.dot(intersect,vHat)
             
-            if abs(np.dot(intersect-center,orth)) < detectorDict["width"]/2 and \
-               abs(np.dot(intersect-center,vert)) < detectorDict["height"]/2:
+            if abs(w) < detectorDict["width"]/2 and \
+               abs(v) < detectorDict["height"]/2:
                 unit = (p2-p1)/np.linalg.norm(p2-p1)
                 theta = np.arccos(np.dot(unit,norm))
                 
-                projOrth = np.dot(unit,orth)
-                projVert = np.dot(unit,vert)
+                projW = np.dot(unit,wHat)
+                projV = np.dot(unit,vHat)
 
-                thOrth = np.arcsin(projOrth/np.linalg.norm(unit-projVert*vert))
-                thVert = np.arcsin(projVert/np.linalg.norm(unit-projOrth*orth))
+                thW = np.arcsin(projW/np.linalg.norm(unit-projV*vHat))
+                thV = np.arcsin(projV/np.linalg.norm(unit-projW*wHat))
 
-                return intersect,theta,thOrth,thVert
+                return intersect,theta,thW,thV
 
             break
 
