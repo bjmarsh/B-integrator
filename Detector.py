@@ -5,7 +5,7 @@ import cPickle as pickle
 import numpy as np
 import Params
 
-def LoadBField(fname):
+def LoadCoarseBField(fname):
     
     if Params.BFieldUsePickle:
         Params.Bx,Params.By,Params.Bz,Params.Bmag = pickle.load(open(fname,"rb"))
@@ -15,7 +15,6 @@ def LoadBField(fname):
     NR = Params.RMAX/Params.DR + 1
     NZ = (Params.ZMAX-Params.ZMIN)/Params.DZ + 1
     NPHI = (Params.PHIMAX-Params.PHIMIN)/Params.DPHI + 1
-
 
     Params.Bx   = np.zeros((NR,NZ,NPHI))
     Params.By   = np.zeros((NR,NZ,NPHI))
@@ -44,6 +43,19 @@ def LoadBField(fname):
 
     Params.BFieldLoaded = True
 
+
+def LoadFineBField(fnamex, fnamey=None, fnamez=None):
+    
+    if fnamey==None:
+        Params.Bx,Params.By,Params.Bz = pickle.load(open(fname,"rb"))
+        Params.BFieldLoaded = True
+        return
+
+    Params.Bxf = pickle.load(open(fnamex,"rb"))
+    Params.Byf = pickle.load(open(fnamey,"rb"))
+    Params.Bzf = pickle.load(open(fnamez,"rb"))
+
+    return
 
 
 def getMaterial(x,y,z):
@@ -100,6 +112,17 @@ def getBField(x,y,z):
     z *= 100
     r = np.sqrt(x**2+y**2)
 
+    if UseFineBField:
+        ZMIN,ZMAX,DZ,RMIN,RMAX,DR,PHIMIN,PHIMAX,DPHI = \
+            Params.ZMINf, Params.ZMAXf, Params.DZf, \
+            Params.RMINf, Params.RMAXf, Params.DRf, \
+            Params.PHIMINf, Params.PHIMAXf, Params.DPHIf
+    else:
+        ZMIN,ZMAX,DZ,RMIN,RMAX,DR,PHIMIN,PHIMAX,DPHI = \
+            Params.ZMIN, Params.ZMAX, Params.DZ, \
+            Params.RMIN, Params.RMAX, Params.DR, \
+            Params.PHIMIN, Params.PHIMAX, Params.DPHI
+
     if z>Params.ZMIN and z<Params.ZMAX and r<Params.RMAX:
 
         r = np.sqrt(x**2+y**2)
@@ -119,10 +142,15 @@ def getBField(x,y,z):
         iz = (nearZ-Params.ZMIN)/Params.DZ
         iphi = (nearPHI-Params.PHIMIN)/Params.DPHI
         
-        Bx = Params.Bx[ir,iz,iphi]
-        By = Params.By[ir,iz,iphi]
-        Bz = Params.Bz[ir,iz,iphi]
-    
+        if Params.UseFineBField:
+            Bx = Params.Bxf[ir,iz,iphi]
+            By = Params.Byf[ir,iz,iphi]
+            Bz = Params.Bzf[ir,iz,iphi]
+        else:
+            Bx = Params.Bx[ir,iz,iphi]
+            By = Params.By[ir,iz,iphi]
+            Bz = Params.Bz[ir,iz,iphi]
+            
         return np.array([Bx,By,Bz])
 
     else:

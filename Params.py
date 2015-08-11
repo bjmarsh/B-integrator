@@ -20,11 +20,12 @@ Q = 1  ## in units of e
 m = 105.658  ## in MeV 
 solRad = 3.6  ## in m
 solLength = 15.0   ## in m
-MSCtype = 'kuhn'
+MSCtype = 'PDG'
 EnergyLossOn = False
 SuppressStoppedWarning = False
 BFieldType = 'CMS'
 BFieldUsePickle = True
+UseFineBField = False
 MatSetup = 'cms'
 
 ## internal parameters. don't touch
@@ -45,3 +46,18 @@ Bx = np.array([])
 By = np.array([])
 Bz = np.array([])
 Bmag = np.array([])
+
+## parameters to load fine bfield
+ZMINf = -1500
+ZMAXf = 1500
+DZf = 1
+RMINf = 0
+RMAXf = 900
+DRf = 1
+PHIMINf = 0
+PHIMAXf = 355
+DPHIf = 5
+Bxf = np.array([])
+Byf = np.array([])
+Bzf = np.array([])
+Bmagf = np.array([])
