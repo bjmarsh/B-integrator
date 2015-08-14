@@ -8,21 +8,24 @@ import Detector
 import Params
 import Drawing
 
-Detector.LoadBField("bfield/bfield.pkl")
+#Detector.LoadCoarseBField("bfield/bfield.pkl")
 
 Params.BFieldType = 'cms'
 Params.Q = 1.0
 Params.MSCtype = 'none'
 Params.EnergyLossOn = False
+Params.Interpolate = False
+Params.UseFineBField = True
 
 z = 0
 phi = 0
 Bdl=0
 Bdlvals = [0]
-rvals = np.arange(0,901,10)
+dr = 0.5
+rvals = np.arange(0,901,dr)
 for r in rvals:
 
-    igd = Detector.getBField(r/100.0,0,0)[2]*0.1 * 0.3/20 * 180/np.pi
+    igd = Detector.getBField(r/100.0,0,0)[2]*dr/100 * 0.3/20 * 180/np.pi
     Bdl += igd
     Bdlvals.append(Bdl)
 
@@ -59,24 +62,5 @@ plt.legend(loc='lower right')
 plt.xlabel('r (cm)')
 plt.ylabel(r'$\Delta\theta$')
 plt.title(r'$\Delta\theta$ vs. r')
-
-plt.show()
-exit(0)
-
-Params.EnergyLossOn = True
-
-traj = Integrator.rk4(x0,Integrator.traverseBField,dt,nsteps,cutoff=9,cutoffaxis=3)
-
-ns = traj.shape[1]-1
-time = np.arange(0,ns*dt+1e-10, dt)
-E = np.linalg.norm(traj[3:,:],axis=0)
-
-plt.figure(2)
-plt.plot(time,E/1000)
-
-plt.gca().set_ylim(ymin=0)
-plt.xlabel('time (ns)')
-plt.ylabel('Energy (GeV)')
-plt.title('Energy vs. time')
 
 plt.show()

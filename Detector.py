@@ -75,8 +75,8 @@ def getMaterial(x,y,z):
     if not withinLength:
         return 'air'
     
-    if r < 1.3:
-        mat = 'si'
+    if r < 1.29:
+        mat = 'air'
     elif r < 1.8:
         mat = 'pbwo4'
     elif r < 2.95:
@@ -87,6 +87,9 @@ def getMaterial(x,y,z):
         mat = 'fe'
     else:
         mat = 'air'
+
+    if x>9:
+        mat = 'concrete'
 
     return mat
     
@@ -112,7 +115,7 @@ def getBField(x,y,z):
     z *= 100
     r = np.sqrt(x**2+y**2)
 
-    if UseFineBField:
+    if Params.UseFineBField:
         ZMIN,ZMAX,DZ,RMIN,RMAX,DR,PHIMIN,PHIMAX,DPHI = \
             Params.ZMINf, Params.ZMAXf, Params.DZf, \
             Params.RMINf, Params.RMAXf, Params.DRf, \
@@ -123,7 +126,7 @@ def getBField(x,y,z):
             Params.RMIN, Params.RMAX, Params.DR, \
             Params.PHIMIN, Params.PHIMAX, Params.DPHI
 
-    if z>Params.ZMIN and z<Params.ZMAX and r<Params.RMAX:
+    if z>ZMIN and z<ZMAX and r<RMAX:
 
         r = np.sqrt(x**2+y**2)
         phi = np.arctan2(y,x) * 180/np.pi
@@ -131,25 +134,33 @@ def getBField(x,y,z):
         if phi<0:
             phi += 360
         
-        nearR = int(Params.DR*round(r/Params.DR))
-        nearZ = int(Params.DZ*round(z/Params.DZ))
-        nearPHI = int(Params.DPHI*round(phi/Params.DPHI))
+        # nearR = int(DR*round(r/DR))
+        nearZ = int(DZ*round(z/DZ))
+        nearPHI = int(DPHI*round(phi/DPHI))
         
         if nearPHI==360:
             nearPHI = 0
 
-        ir = nearR/Params.DR
-        iz = (nearZ-Params.ZMIN)/Params.DZ
-        iphi = (nearPHI-Params.PHIMIN)/Params.DPHI
+        iz = (nearZ-ZMIN)/DZ
+        iphi = (nearPHI-PHIMIN)/DPHI
+
+        ir = r/DR
+        irlow = int(np.floor(ir))
+        irhigh = int(np.ceil(ir))
+        irfrac = ir-irlow
+
+        if not Params.Interpolate:
+            irfrac = 1
+            irhigh = int(np.round(ir))
         
         if Params.UseFineBField:
-            Bx = Params.Bxf[ir,iz,iphi]
-            By = Params.Byf[ir,iz,iphi]
-            Bz = Params.Bzf[ir,iz,iphi]
+            Bx = irfrac*Params.Bxf[irhigh,iz,iphi]+(1-irfrac)*Params.Bxf[irlow,iz,iphi]
+            By = irfrac*Params.Byf[irhigh,iz,iphi]+(1-irfrac)*Params.Byf[irlow,iz,iphi]
+            Bz = irfrac*Params.Bzf[irhigh,iz,iphi]+(1-irfrac)*Params.Bzf[irlow,iz,iphi]
         else:
-            Bx = Params.Bx[ir,iz,iphi]
-            By = Params.By[ir,iz,iphi]
-            Bz = Params.Bz[ir,iz,iphi]
+            Bx = irfrac*Params.Bx[irhigh,iz,iphi]+(1-irfrac)*Params.Bx[irlow,iz,iphi]
+            By = irfrac*Params.By[irhigh,iz,iphi]+(1-irfrac)*Params.By[irlow,iz,iphi]
+            Bz = irfrac*Params.Bz[irhigh,iz,iphi]+(1-irfrac)*Params.Bz[irlow,iz,iphi]
             
         return np.array([Bx,By,Bz])
 

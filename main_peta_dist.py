@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 import math
 import os.path
@@ -18,18 +18,19 @@ if mode=="VIS":
     ntrajs = 15
     trajs = []
 if mode=="STATS":
-    ntrajs = 10000
+    ntrajs = 1000
     trajs = []
 
-outname = "data/detectorHits/stats_updown_nomsc_eta19_08101323"
+outname = "data/detectorHits/stats_concretetest_08141642"
 
-Params.BFieldType = 'updown'
-Params.MSCtype = 'none'
-Params.EnergyLossOn = False
+Params.BFieldType = 'cms'
+Params.MSCtype = 'PDG'
+Params.EnergyLossOn = True
+Params.UseFineBField = False
 Params.Q = 1
 Params.m = 105.
 
-Detector.LoadBField("bfield/bfield.pkl")
+Detector.LoadCoarseBField("bfield/bfield_coarse.pkl")
 
 # make sure numbers are new each run
 ROOT.gRandom.SetSeed(0)
@@ -43,7 +44,7 @@ nsteps = 400
 # set up detector plane
 
 # normal to the plane (x,0,z)
-normToDetect = np.array([5,0,15])
+normToDetect = np.array([14.,0,0])
 # distance from origin to plane
 distToDetect = np.linalg.norm(normToDetect)
 normToDetect = normToDetect/np.linalg.norm(normToDetect)
@@ -55,8 +56,8 @@ detV = np.array([0,1,0])
 # another orthogonal vector to norm in plane ((normToDetect, detV, detW) form an ON basis)
 detW = np.cross(normToDetect,detV)
 
-detWidth = 4.
-detHeight = 4.
+detWidth = 1.
+detHeight = 1.
 
 detectorDict = {"norm":normToDetect, "dist":distToDetect, "v":detV, 
                 "w":detW, "width":detWidth, "height":detHeight}
@@ -88,8 +89,8 @@ while len(trajs)<ntrajs:
     magp = ROOT.Double(1e9)
     eta = ROOT.Double(-1)
 
-    etalow = 1.3
-    etahigh = 2.4
+    etalow = -0.5
+    etahigh = 0.5
 
     while eta<etalow or eta>etahigh:
         p_eta_dist.GetRandom2(magp,eta)
@@ -97,7 +98,7 @@ while len(trajs)<ntrajs:
     eta = 1.9
 
     th = 2*np.arctan(np.exp(-eta))
-    phimin, phimax = -0.6, 0.6
+    phimin, phimax = -0.2, 0.2
     phi = np.random.rand() * (phimax-phimin) + phimin
     Params.Q = np.random.randint(2)*2 - 1
 
