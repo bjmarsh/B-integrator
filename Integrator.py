@@ -112,9 +112,9 @@ def rk4(x0, update_func, dt, nsteps, cutoff=None, cutoffaxis=None):
         if not Params.SuppressStoppedWarning and np.all(x[:,i+1]==0):
             print "Warning: stopped particle! (initial p =", round(np.linalg.norm(x[3:,0])/1000,2), "GeV)"
 
-            # check if particle has stopped
-            if np.all(x[:,i+1]==0):
-                return x[:,:i+1]
+        # check if particle has stopped
+        if np.all(x[:,i+1]==0):
+            return x[:,:i+1]
         
         if cutoff!=None:
             if cutoffaxis==3 and x[0,i+1]**2+x[1,i+1]**2>=cutoff**2:

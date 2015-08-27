@@ -15,13 +15,13 @@ mode = "STATS"
 visWithStats = False
 
 if mode=="VIS":
-    ntrajs = 15
+    ntrajs = 25
     trajs = []
 if mode=="STATS":
-    ntrajs = 1000
+    ntrajs = 10000
     trajs = []
 
-outname = "data/detectorHits/stats_concretetest_08141642"
+outname = "data/detectorHits/stats_concretetest_08201203"
 
 Params.BFieldType = 'cms'
 Params.MSCtype = 'PDG'
@@ -29,17 +29,23 @@ Params.EnergyLossOn = True
 Params.UseFineBField = False
 Params.Q = 1
 Params.m = 105.
+Params.SuppressStoppedWarning = True
 
 Detector.LoadCoarseBField("bfield/bfield_coarse.pkl")
 
 # make sure numbers are new each run
 ROOT.gRandom.SetSeed(0)
 
-rootfile = ROOT.TFile("pdist/test.root")
-p_eta_dist = rootfile.Get("samplehisto")
+rootfile = ROOT.TFile("pdist/p_eta_dist.root")
+p_eta_dist = rootfile.Get("total")
+
+for i in range(1,p_eta_dist.GetNbinsX()+1):
+    for j in range(1,p_eta_dist.GetNbinsY()+1):
+        if p_eta_dist.GetBinContent(i,j) < 0:
+            p_eta_dist.SetBinContent(i,j,0)
 
 dt = 0.2
-nsteps = 400
+nsteps = 500
 
 # set up detector plane
 
@@ -56,8 +62,8 @@ detV = np.array([0,1,0])
 # another orthogonal vector to norm in plane ((normToDetect, detV, detW) form an ON basis)
 detW = np.cross(normToDetect,detV)
 
-detWidth = 1.
-detHeight = 1.
+detWidth = 2.
+detHeight = 2.
 
 detectorDict = {"norm":normToDetect, "dist":distToDetect, "v":detV, 
                 "w":detW, "width":detWidth, "height":detHeight}
@@ -89,18 +95,19 @@ while len(trajs)<ntrajs:
     magp = ROOT.Double(1e9)
     eta = ROOT.Double(-1)
 
-    etalow = -0.5
-    etahigh = 0.5
+    etalow =  0
+    etahigh = 0.1
 
     while eta<etalow or eta>etahigh:
         p_eta_dist.GetRandom2(magp,eta)
 
-    eta = 1.9
+    eta *= np.random.randint(2)*2 - 1
 
     th = 2*np.arctan(np.exp(-eta))
-    phimin, phimax = -0.2, 0.2
+    phimin, phimax = -0.1, 0.33
     phi = np.random.rand() * (phimax-phimin) + phimin
     Params.Q = np.random.randint(2)*2 - 1
+    phi *= Params.Q
 
     p = 1000*magp * np.array([np.sin(th)*np.cos(phi),np.sin(th)*np.sin(phi),np.cos(th)])
     x0 = np.array([0,0,0,p[0],p[1],p[2]])
@@ -111,7 +118,7 @@ while len(trajs)<ntrajs:
         trajs.append(traj)
 
     intersection, theta, thW, thV = Detector.FindIntersection(traj, detectorDict)
-    if intersection != None:
+    if intersection is not None:
         intersects.append(intersection)
         print len(trajs), ": p =",magp, ", eta =", eta, ", phi =", phi
         if mode=="VIS":
