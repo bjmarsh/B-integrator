@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,12 +7,12 @@ import Params
 import Integrator
 import Detector
 
-Detector.LoadBField("bfield/bfield.pkl")
+Detector.LoadCoarseBField("bfield/bfield_coarse.pkl")
 
 Params.BFieldOn = True
 Params.BFieldType = 'cms'
 Params.MSCtype = 'none'
-Params.Q = 1
+Params.Q = 1.0
 Params.m = 105.
 
 dt = 0.1
@@ -22,7 +22,7 @@ bvals = []
 
 pvals = np.arange(2000.,20001.,100.)
 
-nth = 1.
+nth = 30.
 
 for p in pvals:
     thvals.append(0)
@@ -50,12 +50,12 @@ plt.figure(1)
 plt.plot(pvals/1000,thvals)
 plt.xlabel('p (GeV)')
 plt.ylabel(r'$\Delta\theta$ (deg)')
-plt.title(r'$\Delta\theta$ vs. initial $p$, $\eta=0$')
+plt.title(r'$\Delta\theta$ vs. initial $p$, $\eta=0$, q=1.0e')
 
 plt.figure(2)
 plt.plot(pvals/1000,bvals)
 plt.xlabel('p (GeV)')
 plt.ylabel('Impact parameter (m)')
-plt.title(r'Impact parameter vs. initial $p$, $\eta=0$')
+plt.title(r'Impact parameter vs. initial $p$, $\eta=0$, q=1.0e')
 
 plt.show()

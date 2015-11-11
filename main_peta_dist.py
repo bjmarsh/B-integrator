@@ -21,13 +21,13 @@ if mode=="STATS":
     ntrajs = 10000
     trajs = []
 
-outname = "data/detectorHits/stats_concretetest_08201203"
+outname = "data/detectorHits/stats_concretetest_10081632"
 
 Params.BFieldType = 'cms'
-Params.MSCtype = 'PDG'
+Params.MSCtype = 'pdg'
 Params.EnergyLossOn = True
 Params.UseFineBField = False
-Params.Q = 1
+Params.Q = 0.01
 Params.m = 105.
 Params.SuppressStoppedWarning = True
 
@@ -50,7 +50,7 @@ nsteps = 500
 # set up detector plane
 
 # normal to the plane (x,0,z)
-normToDetect = np.array([14.,0,0])
+normToDetect = np.array([33.,0,0.])
 # distance from origin to plane
 distToDetect = np.linalg.norm(normToDetect)
 normToDetect = normToDetect/np.linalg.norm(normToDetect)
@@ -62,8 +62,8 @@ detV = np.array([0,1,0])
 # another orthogonal vector to norm in plane ((normToDetect, detV, detW) form an ON basis)
 detW = np.cross(normToDetect,detV)
 
-detWidth = 2.
-detHeight = 2.
+detWidth = 1.
+detHeight = 1.
 
 detectorDict = {"norm":normToDetect, "dist":distToDetect, "v":detV, 
                 "w":detW, "width":detWidth, "height":detHeight}
@@ -95,19 +95,19 @@ while len(trajs)<ntrajs:
     magp = ROOT.Double(1e9)
     eta = ROOT.Double(-1)
 
-    etalow =  0
-    etahigh = 0.1
+    etalow =  0.7
+    etahigh = 1.01
 
     while eta<etalow or eta>etahigh:
         p_eta_dist.GetRandom2(magp,eta)
 
-    eta *= np.random.randint(2)*2 - 1
+    #eta *= np.random.randint(2)*2 - 1
 
     th = 2*np.arctan(np.exp(-eta))
-    phimin, phimax = -0.1, 0.33
+    phimin, phimax = -0.3,0.3
     phi = np.random.rand() * (phimax-phimin) + phimin
-    Params.Q = np.random.randint(2)*2 - 1
-    phi *= Params.Q
+    Params.Q *= np.random.randint(2)*2 - 1
+    phi *= Params.Q/abs(Params.Q)
 
     p = 1000*magp * np.array([np.sin(th)*np.cos(phi),np.sin(th)*np.sin(phi),np.cos(th)])
     x0 = np.array([0,0,0,p[0],p[1],p[2]])
@@ -132,7 +132,7 @@ while len(trajs)<ntrajs:
             v = np.dot(intersection, detV)
             stats.Fill(Params.Q,magp,magp*np.sin(th),eta,phi,theta, thW, thV, w, v)
             txtfile = open(outname+".txt",'a')
-            txtfile.write("{0:d}\t{1:f}\t{2:f}\t{3:f}\t{4:f}\t{5:f}\t{6:f}\t{7:f}\t{8:f}\t{9:f}\n".format(Params.Q,magp,magp*np.sin(th),eta,phi,theta,thW,thV,w,v))
+            txtfile.write("{0:f}\t{1:f}\t{2:f}\t{3:f}\t{4:f}\t{5:f}\t{6:f}\t{7:f}\t{8:f}\t{9:f}\n".format(Params.Q,magp,magp*np.sin(th),eta,phi,theta,thW,thV,w,v))
 
 if mode=="STATS":
     fid = ROOT.TFile(outname+".root","RECREATE")

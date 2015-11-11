@@ -88,7 +88,7 @@ def getMaterial(x,y,z):
     else:
         mat = 'air'
 
-    if x>9:
+    if x>16.5:
         mat = 'concrete'
 
     return mat

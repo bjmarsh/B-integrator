@@ -75,23 +75,23 @@ for i in range(len(init_p)):
     x0 = np.array([0,0,0]+init_p[i])
     trajs[i] = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
 
-plt.figure(2)
+# plt.figure(2)
 
-for i in range(len(init_p)):
-    trajE = np.linalg.norm(trajs[i][3:,:],axis=0)/1000.
-    plt.plot(trajs[i][0,:],trajE, color=colors[i],
-             label=str(int(init_p[i][0]/1000))+" GeV")
+# for i in range(len(init_p)):
+#     trajE = np.linalg.norm(trajs[i][3:,:],axis=0)/1000.
+#     plt.plot(trajs[i][0,:],trajE, color=colors[i],
+#              label=str(int(init_p[i][0]/1000))+" GeV")
 
-plt.plot([4,4],[0,20],'--k')
-plt.text(3,13,'Si',size='large')
-plt.text(4.6,13,'Fe',size='large')
+# plt.plot([4,4],[0,20],'--k')
+# plt.text(3,13,'Si',size='large')
+# plt.text(4.6,13,'Fe',size='large')
 
-plt.legend()
-plt.xlabel('Horizontal Distance (m)')
-plt.ylabel('Energy (GeV)')
-plt.title('Energy vs. distance')
-plt.show()
-exit(0)
+# plt.legend()
+# plt.xlabel('Horizontal Distance (m)')
+# plt.ylabel('Energy (GeV)')
+# plt.title('Energy vs. distance')
+# plt.show()
+# exit(0)
 
 fig = plt.figure(2, figsize=(14.5,5.5))
 ## xz slice
