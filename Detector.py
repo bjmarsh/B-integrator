@@ -202,11 +202,14 @@ def FindIntersection(traj, detectorDict):
                 thW = np.arcsin(projW/np.linalg.norm(unit-projV*vHat))
                 thV = np.arcsin(projV/np.linalg.norm(unit-projW*wHat))
 
-                return intersect,theta,thW,thV
+                # momentum when it hits detector
+                pInt = np.linalg.norm(traj[3:,i])
+
+                return intersect,theta,thW,thV,pInt
 
             break
 
-    return None, None, None, None
+    return None, None, None, None, None
 
 
 
