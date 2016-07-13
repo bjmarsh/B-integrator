@@ -15,42 +15,41 @@ mode = "STATS"
 visWithStats = False
 
 if mode=="VIS":
-    ntrajs = 25
+    ntrajs = 15
     trajs = []
 if mode=="STATS":
-    ntrajs = 10000
+    ntrajs = 20000
     trajs = []
 
-outname = "data/detectorHits/stats_concretetest_10081632"
+outname = "data/WJets_v3"
 
 Params.BFieldType = 'cms'
 Params.MSCtype = 'pdg'
 Params.EnergyLossOn = True
 Params.UseFineBField = False
-Params.Q = 0.01
+Params.Q = 1.0
 Params.m = 105.
 Params.SuppressStoppedWarning = True
 
-Detector.LoadCoarseBField("bfield/bfield_coarse.pkl")
+Detector.LoadCoarseBField("../B-integrator/bfield/bfield_coarse.pkl")
 
 # make sure numbers are new each run
 ROOT.gRandom.SetSeed(0)
 
-rootfile = ROOT.TFile("pdist/p_eta_dist.root")
-p_eta_dist = rootfile.Get("total")
+rootfile = ROOT.TFile("p_eta_dists/WJets_CutPtSpect_v2.root")
+pt_dist = rootfile.Get("pt")
 
-for i in range(1,p_eta_dist.GetNbinsX()+1):
-    for j in range(1,p_eta_dist.GetNbinsY()+1):
-        if p_eta_dist.GetBinContent(i,j) < 0:
-            p_eta_dist.SetBinContent(i,j,0)
+for i in range(1,pt_dist.GetNbinsX()+1):
+        if pt_dist.GetBinContent(i) < 0:
+            pt_dist.SetBinContent(i,0)
 
 dt = 0.2
-nsteps = 500
+nsteps = 700
 
 # set up detector plane
 
 # normal to the plane (x,0,z)
-normToDetect = np.array([33.,0,0.])
+normToDetect = np.array([33.0,0,0])
 # distance from origin to plane
 distToDetect = np.linalg.norm(normToDetect)
 normToDetect = normToDetect/np.linalg.norm(normToDetect)
@@ -62,12 +61,13 @@ detV = np.array([0,1,0])
 # another orthogonal vector to norm in plane ((normToDetect, detV, detW) form an ON basis)
 detW = np.cross(normToDetect,detV)
 
-detWidth = 1.
-detHeight = 1.
+detWidth = 1.0
+detHeight = 1.0
 
 detectorDict = {"norm":normToDetect, "dist":distToDetect, "v":detV, 
                 "w":detW, "width":detWidth, "height":detHeight}
 
+# the four corners (for drawing)
 c1 = center + detW*detWidth/2 + detV*detHeight/2
 c2 = center + detW*detWidth/2 - detV*detHeight/2
 c3 = center - detW*detWidth/2 - detV*detHeight/2
@@ -75,7 +75,7 @@ c4 = center - detW*detWidth/2 + detV*detHeight/2
 
 intersects = []
 
-stats = ROOT.TNtuple("stats","stats","q:p:pT:eta:phi:theta:thW:thV:w:v")
+stats = ROOT.TNtuple("stats","stats","q:p:pT:eta:phi:theta:thW:thV:w:v:pInt")
 ntotaltrajs = 0
 
 if mode=="STATS":
@@ -92,19 +92,20 @@ if mode=="STATS":
     txtfile.close()
 
 while len(trajs)<ntrajs:
-    magp = ROOT.Double(1e9)
+    magp = ROOT.Double(-1)
     eta = ROOT.Double(-1)
 
-    etalow =  0.7
-    etahigh = 1.01
+    etalow =  -0.037
+    etahigh =  0.037
 
-    while eta<etalow or eta>etahigh:
-        p_eta_dist.GetRandom2(magp,eta)
+    while magp<10:
+        magp = pt_dist.GetRandom()
 
-    #eta *= np.random.randint(2)*2 - 1
+    eta = np.random.rand()*(etahigh-etalow) + etalow
 
     th = 2*np.arctan(np.exp(-eta))
-    phimin, phimax = -0.3,0.3
+    magp = magp/np.sin(th)
+    phimin, phimax =  0.00 ,0.22
     phi = np.random.rand() * (phimax-phimin) + phimin
     Params.Q *= np.random.randint(2)*2 - 1
     phi *= Params.Q/abs(Params.Q)
@@ -117,10 +118,10 @@ while len(trajs)<ntrajs:
     if mode=="VIS":
         trajs.append(traj)
 
-    intersection, theta, thW, thV = Detector.FindIntersection(traj, detectorDict)
+    intersection, theta, thW, thV, pInt = Detector.FindIntersection(traj, detectorDict)
     if intersection is not None:
         intersects.append(intersection)
-        print len(trajs), ": p =",magp, ", eta =", eta, ", phi =", phi
+        print len(trajs), ": p =",magp, ", eta =", eta, ", phi =", phi, ", eff =", float(len(intersects))/ntotaltrajs
         if mode=="VIS":
             pass
         if mode=="STATS":
@@ -130,9 +131,9 @@ while len(trajs)<ntrajs:
                 trajs.append(0)
             w = np.dot(intersection, detW)
             v = np.dot(intersection, detV)
-            stats.Fill(Params.Q,magp,magp*np.sin(th),eta,phi,theta, thW, thV, w, v)
+            stats.Fill(Params.Q,magp,magp*np.sin(th),eta,phi,theta, thW, thV, w, v, pInt)
             txtfile = open(outname+".txt",'a')
-            txtfile.write("{0:f}\t{1:f}\t{2:f}\t{3:f}\t{4:f}\t{5:f}\t{6:f}\t{7:f}\t{8:f}\t{9:f}\n".format(Params.Q,magp,magp*np.sin(th),eta,phi,theta,thW,thV,w,v))
+            txtfile.write("{0:f}\t{1:f}\t{2:f}\t{3:f}\t{4:f}\t{5:f}\t{6:f}\t{7:f}\t{8:f}\t{9:f}\t{10:f}\n".format(Params.Q,magp,magp*np.sin(th),eta,phi,theta,thW,thV,w,v,pInt))
 
 if mode=="STATS":
     fid = ROOT.TFile(outname+".root","RECREATE")
