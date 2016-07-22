@@ -3,6 +3,8 @@
 
 import numpy as np
 
+## NOTE: all numbers for the below two lists are found at http://pdg.lbl.gov/2015/AtomicNuclearProperties/
+
 ## materials definition. (atomic num, atomic weight, density (g/cm3), radiation length (m))
 materials = { "fe"   : (26, 55.845, 7.874, .01757), 
               "si"   : (14, 28.0855, 2.329, .0937),

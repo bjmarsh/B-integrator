@@ -8,9 +8,9 @@ import Detector
 import Params
 import Drawing
 
-#Detector.LoadBField("bfield/bfield.pkl")
+Detector.LoadCoarseBField("../bfield/bfield_coarse.pkl")
 
-Params.BFieldType = 'none'
+Params.BFieldType = 'cms'
 Params.Q = 1.0
 scatterType = 'PDG'
 Params.MSCtype = scatterType
