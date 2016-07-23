@@ -8,14 +8,14 @@ import Detector
 import Params
 import Drawing
 
-#Detector.LoadCoarseBField("bfield/bfield.pkl")
+Detector.LoadCoarseBField("../bfield/bfield_coarse.pkl")
 
 Params.BFieldType = 'cms'
 Params.Q = 1.0
 Params.MSCtype = 'none'
 Params.EnergyLossOn = False
-Params.Interpolate = False
-Params.UseFineBField = True
+Params.Interpolate = True
+Params.UseFineBField = False
 
 z = 0
 phi = 0

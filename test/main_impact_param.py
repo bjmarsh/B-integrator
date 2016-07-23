@@ -7,7 +7,7 @@ import Params
 import Integrator
 import Detector
 
-Detector.LoadCoarseBField("bfield/bfield_coarse.pkl")
+Detector.LoadCoarseBField("../bfield/bfield_coarse.pkl")
 
 Params.BFieldOn = True
 Params.BFieldType = 'cms'

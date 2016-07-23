@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+## compare scatter angle distributions for 2 different MSC algorithms
+
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,9 +13,9 @@ import Params
 
 # modify globals from their default values
 Params.BFieldOn = False
+Params.MatSetup = "sife"
 
 dt = 0.2
-nsteps = 250
 
 p0 = [10000,0,0]
 x0 = np.array([0,0,0]+p0)
@@ -43,38 +45,6 @@ plt.title('Scattering Angle through 6 cm of Si')
 plt.legend()
 
 print "Finished dtheta distribution"
-
-# zvalsKuhn = []
-# zvalsPDG = []
-
-# Params.MSCtype = 'Kuhn'
-# for i in range(1000):
-#     traj = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
-#     zvalsKuhn.append(traj[2,-1])
-
-# Params.MSCtype = 'PDG'
-# for i in range(1000):
-#     traj = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
-#     zvalsPDG.append(traj[2,-1])
-
-# plt.figure(2)
-
-# plt.hist(zvalsKuhn, bins=20, log=False, alpha=0.5, histtype='stepfilled')
-# plt.hist(zvalsPDG,  bins=20, log=False, alpha=0.5, histtype='stepfilled')
-
-# print "Finished final Z distribution"
-
-# Params.MSCtype = 'Kuhn'
-# trajKuhn = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
-# Params.MSCtype = 'PDG'
-# trajPDG = Integrator.rk4(x0, Integrator.traverseBField, dt, nsteps)
-
-# time = np.arange(0,nsteps*dt+1e-10, dt)
-
-# plt.figure(3)
-
-# plt.plot(time, trajKuhn[1,:])
-# plt.plot(time, trajPDG[1,:])
 
 plt.show()
 
